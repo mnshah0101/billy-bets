@@ -48,5 +48,3 @@ Collaborations are welcome! For enhancements, please open an issue first to disc
 This project is licensed under the MIT license. For more information refer to the `LICENSE` file in the repository.
 
 Remember to always comment your code to make it easily understandable.
-
-Visit our [FAQ](FAQ.md) and [WIKI](WIKI.md) for more information.
