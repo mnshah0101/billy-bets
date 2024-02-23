@@ -1,50 +1,48 @@
-# Billy Bets - Sports Data Analysis Model
+# Billy Bets - Your Sports Betting Assistant
 
-Billy Bets project is aimed at developing a cutting-edge language model that answers sports stats-related queries articulated in natural language. This project employs advanced technologies including LangChain, Pandas, SportsData.io and OpenAI.
+**Billy Bets** is a Python project designed as a sports betting assistant supported by advanced AI and data analytics tools including Langchain, the GPT series, and Pandas.
+
+_Disclaimer: This project is currently under active development. The functionality and core features may change or be enhanced over time. Stay tuned for updates!_
 
 ## Table of Contents
 
-1. [Getting Started](#gettingstarted)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Contribution](#contribution)
+1. [About Billy Bets](#about-billy-bets)
+2. [Features](#features)
+3. [How it Works](#how-it-works)
+4. [Development Roadmap](#development-roadmap)
+5. [Contributing](#contributing)
 6. [License](#license)
 
-## Getting Started <a name = "gettingstarted"></a>
+## About Billy Bets
 
-To get started, you should clone the repository to your local machine by using Git commands.
+Billy Bets is an innovative Python project designed to assist sports betting enthusiasts. It leverages the power of AI technologies and data analytics to deliver insightful information, which can be crucial for making betting decisions. By simplifying complex statistical analysis and offering data-driven advice, Billy Bets aims to revolutionize sports betting.
 
-## Prerequisites <a name = "prerequisites"></a>
+## Features
 
-You need to have the following installed on your machine:
+- Enhancing betting predictions with AI and data analytics.
+- Answering complex objective or subjective queries on sports statistics.
+- Leveraging various APIs to source accurate and most relevant data.
 
-1. Python: Make sure you have the latest version of Python installed.
-2. Django: This project uses Django for its backend.
-3. Pandas: Used for data manipulation and analysis.
-4. LangChain: Incorporated to improve the language processing.
-5. SportsData.io: Provides the sports statistics.
-6. OpenAI: Used to facilitate machine learning.
+## How it Works
 
-## Installation <a name = "installation"></a>
+Billy Bets takes the user queries about sports statistics and uses multiple APIs to gather data. With the help of Langchain, GPT series, and Pandas, the application analyzes this data, interprets the findings, and provides an easy-to-understand response. The objective is to help users make more informed decisions about sports betting. The process goes through multiple stages to ensure accuracy and efficiency, making the most of the advanced capabilities of AI and data analytics.
 
-After fulfilling the prerequisites, follow these steps:
+## Development Roadmap
 
-1. Clone the repository to your local workspace.
-2. Install the required packages using the command `pip install -r requirements.txt`.
-3. Migrate the database using the command `python manage.py migrate`.
-4. Now, you are all set to run the server using the command `python manage.py runserver`.
+Being in the active phase of development, we plan to include several additional features and improve the overall functionality of Billy Bets. We're aiming to deliver an even more robust and versatile sports betting assistant to sports enthusiasts.
 
-## Usage <a name = "usage"></a>
+## Contributing
 
-Once the server is up and running, you can interact with the model by sending a POST request to the server with the sports stats query articulated in natural language. The server will return the desired output in a structured JSON format.
+As Billy Bets is an open-source project, we would warmly welcome contributions. Feel free to submit issues, fork the repo and send pull requests!
 
-## Contribution <a name = "contribution"></a>
+Before submitting your contributions, please make sure to take a moment and read through the following guidelines:
 
-Collaborations are welcome! For enhancements, please open an issue first to discuss what you would like to change.
+1. **Fork the project**: Start by forking the project to your own account. This allows you to freely experiment with your ideas.
+2. **Create a branch**: Create a dedicated branch for what you're working on.
+3. **Create an issue**: If you spot an issue that you'd like to fix, it's a good practice to open a issue prior to starting work.
 
-## License <a name = "license"></a>
+When submitting a pull request, please make sure that your modifications are well-tested. We value quality and are sure future users will as well.
 
-This project is licensed under the MIT license. For more information refer to the `LICENSE` file in the repository.
+## License
 
-Remember to always comment your code to make it easily understandable.
+Billy Bets is licensed under the MIT license. Feel free to use, modify or share it with others under the terms of this license.
