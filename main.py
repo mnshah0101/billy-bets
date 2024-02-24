@@ -1,16 +1,8 @@
-# %env OPENAI_API_KEY=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
-NFL_API_KEY='03343bdf66674d07bd551056a1134e98'
-CBB_API_KEY='a7caa0edd86c4e4ea41699c50a8e268f'
-
-# !pip install langchain_experimental 
-# !pip install langchain_openai
-# !pip install openai
-# !pip install langchain
-
 import requests
 import pandas as pd
 import os
 import json
+from dotenv import load_dotenv
 from openai import OpenAI
 from langchain.agents import load_tools
 from langchain.agents import initialize_agent, Tool
@@ -19,7 +11,16 @@ from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe
 from langchain_openai import ChatOpenAI
 
 
-def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Apim-Subscription-Key': CBB_API_KEY}):
+load_dotenv()
+
+filename = 'cbb_endpoints.json'
+
+with open(filename, 'r') as file:
+    cbb_endpoints = json.load(file)
+
+
+
+def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Apim-Subscription-Key': os.getenv('CBB_API_KEY')}):
     """
     Makes a GET request to a specified URL with given path and query parameters.
 
@@ -31,7 +32,7 @@ def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Api
 
     Returns:
     DataFrame/JSON/Object: The response data in the desired format, or None if the request fails.
-"""
+    """
     
     if path_params: 
         endpoint = base_url.format(**path_params)
@@ -49,9 +50,8 @@ def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Api
     else:
         print('Error:', response.status_code, response.text)
         return None
+    
 
-
-# function that maps Team Name to TeamID
 def map_info_to_index(df):
   index_to_info = {}
   for index, row in df.iterrows():
@@ -61,7 +61,6 @@ def map_info_to_index(df):
 
   sorted_teams = dict(sorted(index_to_info.items(), key=lambda x: x[1]))
   return sorted_teams
-
 
 
 #Maps name to playerID
@@ -106,25 +105,27 @@ def format_response(response_1):
     return return_df
 
 
-def run_agent(return_df): 
+
+def run_agent(return_df, query): 
     agent = create_pandas_dataframe_agent(
         ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
         return_df,
         verbose=True,
         agent_type=AgentType.OPENAI_FUNCTIONS,
+        api_key=os.getenv("OPENAI_API_KEY")
     )
 
-    response = agent.run("What is Duke's record against NCAR when at home the last 5 seasons?")
+    response = agent.run(query)
     return response
 
 
-# +
 def main(query):
     chat_response = chat_query(query)
     formatted = format_response(chat_response)
-    return run_agent(formatted)
-    
-main("Are there any college basketball games going on right now?")
-# -
+    if isinstance(formatted, pd.DataFrame): 
+        return run_agent(formatted, query)
+    else: 
+        return formatted
 
-
+if __name__ == '__main__': 
+    print(main('Are there any college basketball games going on right now'))
