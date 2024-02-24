@@ -7,27 +7,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 import time
 import os
-
-"""
-serp api request function
-"""
-
-
-def serpapi_get_request(q):
-    try:
-        params = {
-            'q': q,
-            'location': "New York",
-            'api_key': os.environ['SERP_API_KEY'],
-            'engine': 'google'
-            # replace 'YOUR_SERPAPI_API_KEY' with your actual key
-        }
-
-        response = requests.get('https://serpapi.com/search', params=params)
-
-        return response
-    except:
-        print("There was an error")
+from langchain.tools import Tool
+from langchain_community.utilities import GoogleSearchAPIWrapper
+os.environ["GOOGLE_CSE_ID"] = ""
+os.environ["GOOGLE_API_KEY"] = ""
+os.environ['OPENAI_API_KEY'] = ""
 
 
 """
@@ -39,29 +23,6 @@ params:
 return:
     text: string of webpage text
 """
-
-
-def get_page_content_driver(url):
-    try:
-        # Initiate driver
-        driver = webdriver.Chrome()
-
-        # To open a page
-        driver.get(url)
-
-        # Get page HTML source
-        html = driver.page_source
-        driver.quit()
-
-        soup = BeautifulSoup(html, 'html.parser')
-
-        article = soup.find('article', class_='article')
-
-        # get all text
-        text = article.get_text()
-        return web_text(text)
-    except:
-        return None
 
 
 def get_page_content_requests(url):
@@ -113,17 +74,10 @@ Get text from Google Search
 """
 
 
-def get_search_string(q):
+def get_search_string(query):
     try:
-        response = serpapi_get_request(q)
-        response = response.json()
-        links = []
-        try:
-            links = [res['link'] for res in response['organic_results'] if 'espn.com' not in res['link'] and 'twitter' not in res['link']
-                     and 'instagram' not in res['link'] and 'facebook' not in res['link'] and 'tiktok' not in res['link']][:3]
-        except:
-            links = []
-
+        query = query.replace('"', '')
+        links = get_links_from_search(query)
         complete_string = ''
         for link in links:
             complete_string += get_page_content_requests(link)
@@ -140,7 +94,7 @@ get answer from question and https
 def get_answer(question, text):
     prompt = ChatPromptTemplate.from_template(
         "Answer this question as an expert sports AI model interacting with a user: {question} given this web page text from multiple web pages. If there is no text, tell the user there wasnt enough information to answer this. Web Page Text: {web_page_text} ")
-    model = ChatOpenAI(model="gpt-3.5-turbo-1106")
+    model = ChatOpenAI(model="gpt-4")
     output_parser = StrOutputParser()
     chain = prompt | model | output_parser
     output = chain.invoke({"question": question, "web_page_text": text})
@@ -174,7 +128,18 @@ def get_subjective_answer(question):
     return answer
 
 
-answer = get_subjective_answer(
-    "What are UVA's chance in March Madness this season.")
+def get_links_from_search(query):
+    search = GoogleSearchAPIWrapper()
+    response = search.results(query, 10)
+    if len(response) < 2:
+        return []
+    links = [res['link']
+             for res in response if 'youtube' and 'instagram' and 'video' and 'facebook' and 'twitter' and 'tiktok' not in res['link']][:3]
+    return links
+
+
+question = input("Enter a question: ")
+
+answer = get_subjective_answer(question)
 
 print(answer)
