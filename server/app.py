@@ -1,8 +1,8 @@
 from __future__ import absolute_import
+from models.subjective import get_subjective_answer
 from flask import Flask, request, jsonify
 import sys
 sys.path.insert(0, '..')
-from models.subjective import get_subjective_answer
 
 
 app = Flask(__name__)
