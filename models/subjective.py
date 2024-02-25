@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
-from selenium import webdriver
+
 import re
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,10 +9,6 @@ import time
 import os
 from langchain.tools import Tool
 from langchain_community.utilities import GoogleSearchAPIWrapper
-os.environ["GOOGLE_CSE_ID"] = ""
-os.environ["GOOGLE_API_KEY"] = ""
-os.environ['OPENAI_API_KEY'] = ""
-
 
 """
 Functions for getting page content
@@ -99,7 +95,7 @@ get answer from question and https
 def get_answer(question, text):
     prompt = ChatPromptTemplate.from_template(
         "Answer this question as an expert sports AI model interacting with a user: {question} given this web page text from a web page. If you cannot answer the question, output 'NOT_ENOUGH_INFORMATION_ERROR' word for word. This is the web pages text: {web_page_text} ")
-    model = ChatOpenAI(model="gpt-4-1106-preview")
+    model = ChatOpenAI(model="gpt-4-1106-preview", api_key=os.getenv('OPENAI_API_KEY'))
     output_parser = StrOutputParser()
     try:
         chain = prompt | model | output_parser
@@ -118,7 +114,7 @@ create google question from chat question
 def create_google_query(question):
     prompt = ChatPromptTemplate.from_template(
         "Create a google search that will find relevant articles to answer this question. The most current year is 2024. This is the question: {question}.")
-    model = ChatOpenAI(model="gpt-4-1106-preview")
+    model = ChatOpenAI(model="gpt-4-1106-preview", api_key=os.getenv('OPENAI_API_KEY'))
     output_parser = StrOutputParser()
     chain = prompt | model | output_parser
     output = chain.invoke({"question": question})
@@ -130,6 +126,15 @@ def create_google_query(question):
 get subjective question answer
 """
 
+def get_links_from_search(query):
+    search = GoogleSearchAPIWrapper()
+    query = query.replace('"', '')
+    response = search.results(query, 10)
+
+    links = [res['link']
+             for res in response if 'espn' and 'youtube' and 'reddit' and 'instagram' and 'video' and 'facebook' and 'twitter' and 'tiktok' not in res['link']]
+
+    return links
 
 def get_subjective_answer(question):
     google_question = create_google_query(question)
@@ -145,14 +150,3 @@ def get_subjective_answer(question):
             return answer
 
     return "Sorry, I don't have enough information to answer that question."
-
-
-def get_links_from_search(query):
-    search = GoogleSearchAPIWrapper()
-    query = query.replace('"', '')
-    response = search.results(query, 10)
-
-    links = [res['link']
-             for res in response if 'espn' and 'youtube' and 'reddit' and 'instagram' and 'video' and 'facebook' and 'twitter' and 'tiktok' not in res['link']]
-
-    return links
