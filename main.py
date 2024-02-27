@@ -1,22 +1,21 @@
 # %env OPENAI_API_KEY=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
-NFL_API_KEY='03343bdf66674d07bd551056a1134e98'
-CBB_API_KEY='a7caa0edd86c4e4ea41699c50a8e268f'
+from langchain_openai import ChatOpenAI
+from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain.agents.agent_types import AgentType
+from langchain.agents import initialize_agent, Tool
+from langchain.agents import load_tools
+from openai import OpenAI
+import json
+import os
+import pandas as pd
+import requests
+NFL_API_KEY = '03343bdf66674d07bd551056a1134e98'
+CBB_API_KEY = 'a7caa0edd86c4e4ea41699c50a8e268f'
 
-# !pip install langchain_experimental 
+# !pip install langchain_experimental
 # !pip install langchain_openai
 # !pip install openai
 # !pip install langchain
-
-import requests
-import pandas as pd
-import os
-import json
-from openai import OpenAI
-from langchain.agents import load_tools
-from langchain.agents import initialize_agent, Tool
-from langchain.agents.agent_types import AgentType
-from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
-from langchain_openai import ChatOpenAI
 
 
 def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Apim-Subscription-Key': CBB_API_KEY}):
@@ -32,12 +31,12 @@ def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Api
     Returns:
     DataFrame/JSON/Object: The response data in the desired format, or None if the request fails.
 """
-    
-    if path_params: 
+
+    if path_params:
         endpoint = base_url.format(**path_params)
-    else: 
+    else:
         endpoint = base_url
-    
+
     response = requests.get(endpoint, headers=headers, params=query_params)
 
     if response.status_code == 200:
@@ -53,18 +52,17 @@ def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Api
 
 # function that maps Team Name to TeamID
 def map_info_to_index(df):
-  index_to_info = {}
-  for index, row in df.iterrows():
-    name_key = row['Teams']
-    for elem in name_key:
-      index_to_info[elem['Name']] = elem['TeamID']
+    index_to_info = {}
+    for index, row in df.iterrows():
+        name_key = row['Teams']
+        for elem in name_key:
+            index_to_info[elem['Name']] = elem['TeamID']
 
-  sorted_teams = dict(sorted(index_to_info.items(), key=lambda x: x[1]))
-  return sorted_teams
+    sorted_teams = dict(sorted(index_to_info.items(), key=lambda x: x[1]))
+    return sorted_teams
 
 
-
-#Maps name to playerID
+# Maps name to playerID
 def map_name_to_player_id(df):
     name_to_id = {}
     for index, row in df.iterrows():
@@ -73,7 +71,7 @@ def map_name_to_player_id(df):
     return name_to_id
 
 
-def chat_query(input_1): 
+def chat_query(input_1):
 
     client = OpenAI()
     chat_completion = client.chat.completions.create(
@@ -89,24 +87,28 @@ def chat_query(input_1):
     return response_1
 
 
-def format_response(response_1):     
+def format_response(response_1):
     response_json = json.loads(response_1)
     url_template = response_json['base_url']
     params = response_json["path_params"]
     return_df = pd.DataFrame()
 
-    if 'season' in params and type(params['season']) != int: 
+    if 'season' in params and type(params['season']) != int:
         for season in params['season']:
-            current_path_params = {'season': season, 'team': params['team']} # Update path_params for the current season
-            response_df = make_get_request(url_template, current_path_params) # Make the GET request for the current season
-            if response_df is not None and isinstance(response_df, pd.DataFrame):  # Check if response_df is not None and is a DataFrame before concatenating
-                return_df = pd.concat([return_df, response_df], ignore_index=True)
+            # Update path_params for the current season
+            current_path_params = {'season': season, 'team': params['team']}
+            # Make the GET request for the current season
+            response_df = make_get_request(url_template, current_path_params)
+            # Check if response_df is not None and is a DataFrame before concatenating
+            if response_df is not None and isinstance(response_df, pd.DataFrame):
+                return_df = pd.concat(
+                    [return_df, response_df], ignore_index=True)
     else:
         return_df = make_get_request(url_template, params)
     return return_df
 
 
-def run_agent(return_df): 
+def run_agent(return_df, query):
     agent = create_pandas_dataframe_agent(
         ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
         return_df,
@@ -114,7 +116,10 @@ def run_agent(return_df):
         agent_type=AgentType.OPENAI_FUNCTIONS,
     )
 
-    response = agent.run("What is Duke's record against NCAR when at home the last 5 seasons?")
+    response = agent.run(
+        query,
+        verbose=True,
+    )
     return response
 
 
@@ -122,9 +127,8 @@ def run_agent(return_df):
 def main(query):
     chat_response = chat_query(query)
     formatted = format_response(chat_response)
-    return run_agent(formatted)
-    
+    return run_agent(formatted, query)
+
+
 main("Are there any college basketball games going on right now?")
 # -
-
-

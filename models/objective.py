@@ -13,11 +13,11 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
-filename = '../cbb_endpoints.json'
+filename = 'cbb_endpoints.json'
+
 
 with open(filename, 'r') as file:
     cbb_endpoints = json.load(file)
-
 
 
 def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Apim-Subscription-Key': os.getenv('CBB_API_KEY')}):
@@ -33,12 +33,12 @@ def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Api
     Returns:
     DataFrame/JSON/Object: The response data in the desired format, or None if the request fails.
     """
-    
-    if path_params: 
+
+    if path_params:
         endpoint = base_url.format(**path_params)
-    else: 
+    else:
         endpoint = base_url
-    
+
     response = requests.get(endpoint, headers=headers, params=query_params)
 
     if response.status_code == 200:
@@ -50,20 +50,20 @@ def make_get_request(base_url, path_params, query_params=None, headers={'Ocp-Api
     else:
         print('Error:', response.status_code, response.text)
         return None
-    
+
 
 def map_info_to_index(df):
-  index_to_info = {}
-  for index, row in df.iterrows():
-    name_key = row['Teams']
-    for elem in name_key:
-      index_to_info[elem['Name']] = elem['TeamID']
+    index_to_info = {}
+    for index, row in df.iterrows():
+        name_key = row['Teams']
+        for elem in name_key:
+            index_to_info[elem['Name']] = elem['TeamID']
 
-  sorted_teams = dict(sorted(index_to_info.items(), key=lambda x: x[1]))
-  return sorted_teams
+    sorted_teams = dict(sorted(index_to_info.items(), key=lambda x: x[1]))
+    return sorted_teams
 
 
-#Maps name to playerID
+# Maps name to playerID
 def map_name_to_player_id(df):
     name_to_id = {}
     for index, row in df.iterrows():
@@ -72,7 +72,7 @@ def map_name_to_player_id(df):
     return name_to_id
 
 
-def chat_query(input_1): 
+def chat_query(input_1):
 
     client = OpenAI()
     chat_completion = client.chat.completions.create(
@@ -88,25 +88,28 @@ def chat_query(input_1):
     return response_1
 
 
-def format_response(response_1):     
+def format_response(response_1):
     response_json = json.loads(response_1)
     url_template = response_json['base_url']
     params = response_json["path_params"]
     return_df = pd.DataFrame()
 
-    if 'season' in params and type(params['season']) != int: 
+    if 'season' in params and type(params['season']) != int:
         for season in params['season']:
-            current_path_params = {'season': season, 'team': params['team']} # Update path_params for the current season
-            response_df = make_get_request(url_template, current_path_params) # Make the GET request for the current season
-            if response_df is not None and isinstance(response_df, pd.DataFrame):  # Check if response_df is not None and is a DataFrame before concatenating
-                return_df = pd.concat([return_df, response_df], ignore_index=True)
+            # Update path_params for the current season
+            current_path_params = {'season': season, 'team': params['team']}
+            # Make the GET request for the current season
+            response_df = make_get_request(url_template, current_path_params)
+            # Check if response_df is not None and is a DataFrame before concatenating
+            if response_df is not None and isinstance(response_df, pd.DataFrame):
+                return_df = pd.concat(
+                    [return_df, response_df], ignore_index=True)
     else:
         return_df = make_get_request(url_template, params)
     return return_df
 
 
-
-def run_agent(return_df, query): 
+def run_agent(return_df, query):
     agent = create_pandas_dataframe_agent(
         ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
         return_df,
@@ -122,7 +125,7 @@ def run_agent(return_df, query):
 def get_objective_answer(query):
     chat_response = chat_query(query)
     formatted = format_response(chat_response)
-    if isinstance(formatted, pd.DataFrame): 
+    if isinstance(formatted, pd.DataFrame):
         return run_agent(formatted, query)
-    else: 
+    else:
         return formatted
