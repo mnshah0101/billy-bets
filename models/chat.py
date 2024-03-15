@@ -1,5 +1,5 @@
-from models.objective import get_objective_answer
-from models.subjective import get_subjective_answer
+from objective import get_objective_answer
+from subjective import get_subjective_answer
 import requests
 import pandas as pd
 import os
@@ -16,8 +16,8 @@ def filter_response(query):
         messages=[
             {
                 "role": "user",
-                "content": f"You are an AI assistant takes in a sports-related question and parses it into a refined query without any grammar or spelling mistakes. Remember that the context is sports, so adjust any mistakes you see with that information: {query}. Also determine if {query} is an objective question or a question that requires opinion (subjective). If the questions asks for what people or experts think about a certain topic, it's likely subjective, if it asks for a specific fact, it's objective. Format your response in a json, {{formatted_question: question, bool: (respond with either objective or subjective)}}"
-            }
+                "content": f"You are an AI assistant takes in a sports-related question and parses it into a refined query without any grammar or spelling mistakes. Remember that the context is sports, so adjust any mistakes you see with that information: {query}. Also determine if {query} is an objective question or a question that requires opinion (subjective). If the questions asks a current event (this week) or for what people or experts think about a certain topic or about tactics/strategies in a game, it's likely subjective, if it asks for a specific fact, it's objective. Regardless, if the question asks about this current week, categorize it as subjective. Format your response in a json, {{formatted_question: question, bool: (respond with either objective or subjective)}}"
+            } 
 
         ],
         model="gpt-4",
@@ -59,3 +59,6 @@ def get_answer(query):
 
     return_dict = {"question": query, "answer": return_answer, "time": length}
     return return_dict
+
+
+print(get_answer("How has Kentucky performed against the spread on the road this season when an underdog?"))
